@@ -5,11 +5,14 @@ if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
 
-# constants
-# readonly ROOT_PASS=$(sudo cat /etc/shadow | grep root)
-# readonly LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
-# readonly LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
-# readonly VARS_PATH="./group_vars/spark/vars"
+function cleanup {
+  if [ "$?" != "0" ]; then
+    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
+    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
+    destroy
+    exit 1
+  fi
+}
 
 # utility functions
 function destroy {
@@ -19,17 +22,6 @@ function destroy {
     ansible-playbook destroy.yml
   fi
 }
-
-# function secrets {
-#   local SECRET_VARS_PATH="./group_vars/spark/secret_vars"
-#   local VAULT_PASS=$(openssl rand -base64 32)
-#   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-#   echo "${VAULT_PASS}" > ./.vault-pass
-#   cat << EOF > ${SECRET_VARS_PATH}
-# `ansible-vault encrypt_string "${TEMP_ROOT_PASS}" --name 'root_pass'`
-# `ansible-vault encrypt_string "${TOKEN_PASSWORD}" --name 'token'`
-# EOF
-# }
 
 function master_ssh_key {
     ssh-keygen -o -a 100 -t ed25519 -C "ansible" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
@@ -86,26 +78,9 @@ EOF
   fi
 }
 
-function deploy { 
-    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
-}
-
-# function deploy {
-#   ansible-playbook provision.yml
-#   ansible-playbook -v -i hosts site.yml --extra-vars "root_pass=${ROOT_PASS}"
-# }
-
-## cleanup ##
-function cleanup {
-  if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
-    cd ${HOME}
-    if [ -d "/tmp/marketplace-apache-spark-occ" ]; then
-      rm -rf /tmp/marketplace-apache-spark-occ
-    fi
-    if [ -f "/usr/local/bin/run" ]; then
-      rm /usr/local/bin/run
-    fi
-  fi
+function deploy {
+  ansible-playbook provision.yml
+  ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS} add_keys_prompt=${ADD_SSH_KEYS}"
 }
 
 # main
