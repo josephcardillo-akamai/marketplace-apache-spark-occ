@@ -1,18 +1,8 @@
 ---
-# - name: install python3-certbot
-#   apt:
-#     name: python3-certbot
-#     state: present
-
 - name: Install Certbot Nginx plugin
   apt:
     name: python3-certbot-nginx
     state: present
-
-# - name: set certbot plugin
-#   set_fact:
-#     certbot_plugin: nginx
-#     cacheable: yes
 
 # certbot dry-runs
 - name: run dry-run for subdomain

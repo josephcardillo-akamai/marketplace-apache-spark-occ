@@ -64,11 +64,9 @@ function build {
   # sudo user
   sudo_username: ${SUDO_USERNAME}
 
-  local_ip: ${LOCAL_IP}
   soa_email_address: ${SOA_EMAIL_ADDRESS}
   spark_user: ${SPARK_USER}
-  spark_ui_password: ${SPARK_UI_PASSWORD}
-  server_count: ${CLUSTER_SIZE}
+  cluster_size: ${CLUSTER_SIZE}
 EOF
   if [[ -n ${TOKEN_PASSWORD} ]]; then
     echo "token_password: ${TOKEN_PASSWORD}" >> ${VARS_PATH};
@@ -88,15 +86,15 @@ EOF
 
 function deploy {
   ansible-playbook provision.yml
-  ansible-playbook -i hosts -v site.yml --extra-vars "root_password=${ROOT_PASS} add_keys_prompt=${ADD_SSH_KEYS}"
+  ansible-playbook -i hosts -vv site.yml --extra-vars "root_password=${ROOT_PASS}"
 }
 
 ## cleanup ##
 function cleanup {
   if [ "$?" != "0" ] || [ "$SUCCESS" == "true" ]; then
     cd ${HOME}
-    if [ -d "/tmp/spark-occ" ]; then
-      rm -rf /tmp/spark-occ
+    if [ -d "/tmp/marketplace-apache-spark-occ" ]; then
+      rm -rf /tmp/marketplace-apache-spark-occ
     fi
     if [ -f "/usr/local/bin/run" ]; then
       rm /usr/local/bin/run

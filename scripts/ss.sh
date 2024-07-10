@@ -9,11 +9,9 @@ fi
 # <UDF name="token_password" label="Your Linode API token" />
 # <UDF name="cluster_name" label="Cluster Name" />
 # <UDF name="sudo_username" label="The limited sudo user to be created in the cluster" />
-# <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no" default="yes" />
 # <UDF name="cluster_size" label="Apache Spark cluster size" default="3" oneof="3" />
 # <UDF name="soa_email_address" label="Email address for Let's Encrypt Certificates" />
 # <UDF name="spark_user" label="User to login to Spark WebUI" />
-# <UDF name="spark_ui_password" label="Password to login to Spark WebUI" />
 
 ## Domain Settings
 #<UDF name="subdomain" label="Subdomain" example="The subdomain for the DNS record. `www` will be entered if no subdomain is supplied (Requires Domain)" default="">
@@ -23,8 +21,8 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 # git repo
-export GIT_REPO="https://github.com/josephcardillo/marketplace-apache-spark-occ.git"
-export WORK_DIR="/tmp/spark-occ"
+export GIT_REPO="https://github.com/akamai-compute-marketplace/marketplace-apache-spark-occ.git"
+export WORK_DIR="/tmp/marketplace-apache-spark-occ"
 export RUN_DIR="/usr/local/bin/run"
 export UUID=$(uuidgen | awk -F - '{print $1}')
 
@@ -94,16 +92,6 @@ function setup {
   # rename provisioner and configure private IP if not present
   rename_provisioner
   configure_privateip
-
-  # write authorized_keys file
-  if [ "${ADD_SSH_KEYS}" == "yes" ]; then
-    if [ ! -d ~/.ssh ]; then
-            mkdir ~/.ssh
-    else
-            echo ".ssh directory is already created"
-    fi
-    curl -sH "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN_PASSWORD}" https://api.linode.com/v4/profile/sshkeys | jq -r .data[].ssh_key > /root/.ssh/authorized_keys
-  fi
 
   # clone repo and set up ansible environment
   git clone ${GIT_REPO} ${WORK_DIR}

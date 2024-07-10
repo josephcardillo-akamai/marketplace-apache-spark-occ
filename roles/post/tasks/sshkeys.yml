@@ -1,26 +1,43 @@
+---
 # roles/post/tasks/sshkeys.yml
-
 - name: set root password on remote nodes
   lineinfile:
     path: /etc/shadow
     regexp: '^root.+'
     line: '{{ root_password }}'
 
-- name: set ssh facts
-  set_fact:
-    add_keys_prompt: '{{ add_keys_prompt }}'
+- name: checking account keys
+  stat:
+    path: '{{ local_home}}/.ssh/authorized_keys'
+  register: authorized_keys_file
+
+- name: adding account keys to sudo user
+  copy:
+    src: '{{ local_home }}/.ssh/authorized_keys'
+    dest: '{{ item.userdir }}/.ssh/authorized_keys'
+    mode: '0600'
+    owner: "{{ item.user }}"
+    group: "{{ item.user }}"
+  loop:
+    - { userdir: '/root', user: 'root' }
+    - { userdir: '/home/{{ sudo_username }}', user: '{{ sudo_username }}' }
+  when:
+    - authorized_keys_file.stat.exists
+    - authorized_keys_file.stat.size > 0
 
 - name: Extract the first line of /root/.ssh/authorized_keys
   command: "head -n 1 /root/.ssh/authorized_keys"
   register: first_line_key
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: Append master's key to workers' authorized_keys
   lineinfile:
     path: "/root/.ssh/authorized_keys"
     line: "{{ hostvars[groups['spark_master'][0]]['first_line_key']['stdout'] }}"
     state: present
-  when: "'spark_workers' in group_names"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
 
 - name: remove ansible from authorized_keys
   lineinfile:

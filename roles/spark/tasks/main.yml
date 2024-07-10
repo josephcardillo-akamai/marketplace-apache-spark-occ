@@ -1,12 +1,13 @@
+---
 # roles/spark/tasks/main.yml
-
 - name: generate ssh key pair on spark master
   openssh_keypair:
     path: /root/.ssh/id_rsa_spark
     owner: root
     group: root
     mode: 0600
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: distribute public key to spark workers
   ansible.posix.authorized_key:
@@ -14,7 +15,6 @@
     key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
   delegate_to: "{{ item }}"
   with_items: "{{ groups['spark_workers'] }}"
-  when: "'spark_master' in group_names"
 
 - name: create /root/.ssh/config for password-less access to workers
   file:
@@ -22,20 +22,25 @@
     state: touch
     mode: '0600'
   become: true
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
+
+- name: Debug spark_data
+  debug:
+    var: spark_data
 
 - name: add ssh config for workers to /root/.ssh/config
   blockinfile:
     path: /root/.ssh/config
     block: |
-      Host {{ spark_worker1_ip1 }}
+      #jinja2: trim_blocks:False
+      {% for server in spark_data.server[1:cluster_size|int] %}
+      Host {{ server.instance.ip_pub1 }}
           User root
-          IdentityFile /root/.ssh/id_rsa_spark
-
-      Host {{ spark_worker2_ip1 }}
-          User root
-          IdentityFile /root/.ssh/id_rsa_spark
-  when: inventory_hostname in groups['spark_master']
+          IdentityFile /root/.ssh/id_rsa_spark 
+      {% endfor %}
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: install Java
   apt:
@@ -76,28 +81,32 @@
     src: spark-env-master.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
     mode: '0755'
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: configure spark-env.sh on workers
   template:
     src: spark-env-worker.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
     mode: '0755'
-  when: "'spark_workers' in group_names"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
 
 - name: configure spark-defaults.conf on master
   template:
     src: spark-defaults-master.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
     mode: '0755'
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: configure spark-defaults.conf on workers
   template:
     src: spark-defaults-worker.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
     mode: '0755'
-  when: "'spark_workers' in group_names"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
 
 - name: populate spark workers file
   template:
@@ -123,13 +132,15 @@
 
       [Install]
       WantedBy=multi-user.target
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: enable spark master
   systemd:
     name: spark-master
     enabled: yes
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: install scala
   apt:
@@ -163,12 +174,14 @@
 # create let's encrypt certs for master
 - name: create and install ssl certificates
   import_tasks: ssl.yml
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 # instal nginx reverse proxy for authentication to master 
 - name: install nginx for reverse proxy auth
   import_tasks: nginx.yml
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: set up SSL certificate renewal cronjob
   cron:
@@ -179,22 +192,18 @@
     day: "1"
     month: "*/3"
     user: root
-
-- name: add hostname to /etc/hosts
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ ansible_default_ipv4.address }} {{ _domain }}"
-    insertafter: EOF
-  when:
-    - domain is defined
-    - "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: start spark master
   systemd:
     name: spark-master
     state: started
-  when: "'spark_master' in group_names"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
 
 - name: start spark workers
-  command: "/opt/spark/sbin/start-workers.sh spark://{{ spark_master_priv1 }}:7077"
-  when: "'spark_master' in group_names"
+  command:
+    cmd: "/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077"
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
