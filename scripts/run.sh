@@ -56,7 +56,7 @@ function build {
   # user vars
   sudo_username: ${SUDO_USERNAME}
   token_password: ${TOKEN_PASSWORD}
-  
+
   # deployment vars
   uuid: ${UUID}
   ssh_keys: ${ANSIBLE_SSH_PUB_KEY}
@@ -87,7 +87,7 @@ EOF
 }
 
 function deploy { 
-    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook --extra-vars "root_pass=${ROOT_PASS}"; done
 }
 
 # function deploy {
