@@ -46,7 +46,7 @@ function master_ssh_key {
 # production
 function build {
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-  secrets
+  # secrets
   master_ssh_key
 
   # write vars file
