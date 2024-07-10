@@ -33,7 +33,7 @@
         api_token: '{{ token_password }}'
         label: '{{ instance_prefix }}{{ item | int }}-{{ uuid }}'
       register: info
-      with_sequence: count='{{ cluster_size }}'
+      with_sequence: count='{{ cluster_size | int }}'
 
     - name: update group_vars with server variables
       blockinfile:
@@ -69,7 +69,7 @@
           [spark_master]
           localhost ansible_connection=local user=root
           [spark_workers]
-          {%- for server in range(count) %}
+          {%- for server in range(count | int) %}
           {{ info.results[server + 1].instance.ipv4[0] }}
           {%- endfor %}
 
