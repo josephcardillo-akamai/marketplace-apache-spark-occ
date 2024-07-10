@@ -92,7 +92,7 @@ function deploy {
 
 function ansible:deploy {
   ansible-playbook provision.yml
-  for playbook in provision.yml ansible-playbook -i hosts -vv site.yml --extra-vars "root_password=${ROOT_PASS}"
+  ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS}"
 }
 
 ## cleanup ##
