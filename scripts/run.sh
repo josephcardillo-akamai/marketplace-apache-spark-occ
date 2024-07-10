@@ -59,7 +59,6 @@ function build {
   type: ${LINODE_PARAMS[0]}
   region: ${LINODE_PARAMS[1]}
   image: ${LINODE_PARAMS[2]}
-  root_pass: ${ROOT_PASS}
   
   linode_tags: ${LINODE_TAGS}
   
@@ -86,11 +85,7 @@ EOF
   fi
 }
 
-function deploy { 
-    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
-}
-
-function ansible:deploy {
+function deploy {
   ansible-playbook provision.yml
   ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS}"
 }
