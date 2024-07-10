@@ -91,9 +91,13 @@ EOF
   fi
 }
 
-function deploy {
+function deploy { 
+    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+}
+
+function ansible:deploy {
   ansible-playbook provision.yml
-  ansible-playbook -i hosts -vv site.yml --extra-vars "root_password=${ROOT_PASS}"
+  for playbook in provision.yml ansible-playbook -i hosts -vv site.yml --extra-vars "root_password=${ROOT_PASS}"
 }
 
 ## cleanup ##
