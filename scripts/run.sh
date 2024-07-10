@@ -87,7 +87,7 @@ EOF
 
 function deploy {
   ansible-playbook provision.yml
-  ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS}"
+  ansible-playbook -v -i hosts site.yml --extra-vars "root_pass=${ROOT_PASS}"
 }
 
 ## cleanup ##
