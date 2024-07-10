@@ -14,7 +14,7 @@
     - name: creating Spark servers
       linode.cloud.instance:
         label: '{{ instance_prefix }}{{ item | int + 1 }}-{{ uuid }}'
-        api_token: '{{ token }}'
+        api_token: '{{ token_password }}'
         type: '{{ type }}'
         region: '{{ region }}'
         image: '{{ image }}'
@@ -30,7 +30,7 @@
 
     - name: Get info about an instance by label
       linode.cloud.instance_info:
-        api_token: '{{ token }}'
+        api_token: '{{ token_password }}'
         label: '{{ instance_prefix }}{{ item | int }}-{{ uuid }}'
       register: info
       with_sequence: count='{{ count }}'
