@@ -6,10 +6,10 @@ if [ "${DEBUG}" == "NO" ]; then
 fi
 
 # constants
-# readonly ROOT_PASS=$(sudo cat /etc/shadow | grep root)
-# readonly LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
-# readonly TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
-# readonly VARS_PATH="./group_vars/spark/vars"
+readonly ROOT_PASS=$(sudo cat /etc/shadow | grep root)
+readonly LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
+readonly LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
+readonly VARS_PATH="./group_vars/spark/vars"
 
 # utility functions
 function destroy {
@@ -45,11 +45,6 @@ function master_ssh_key {
 
 # production
 function build {
-  local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-  # local ROOT_PASS=$(sudo cat /etc/shadow | grep root)
-  local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
-  local LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
-  local VARS_PATH="./group_vars/spark/vars"
   # secrets
   master_ssh_key
 
@@ -64,7 +59,7 @@ function build {
   type: ${LINODE_PARAMS[0]}
   region: ${LINODE_PARAMS[1]}
   image: ${LINODE_PARAMS[2]}
-  root_pass: ${TEMP_ROOT_PASS}
+  root_pass: ${ROOT_PASS}
   
   linode_tags: ${LINODE_TAGS}
   
