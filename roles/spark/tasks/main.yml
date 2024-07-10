@@ -25,9 +25,9 @@
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
 
-- name: Debug spark_data
-  debug:
-    var: spark_data
+# - name: Debug spark_data
+#   debug:
+#     var: spark_data
 
 - name: add ssh config for workers to /root/.ssh/config
   blockinfile:

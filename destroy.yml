@@ -16,4 +16,4 @@
         label: '{{ instance_prefix }}-{{ item | int +1 }}-{{ uuid }}'
         api_token: '{{ token_password }}'
         state: absent
-      with_sequence: count='{{ cluster_size }}'
+      with_sequence: count='{{ count }}'
