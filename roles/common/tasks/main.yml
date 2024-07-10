@@ -55,6 +55,7 @@
     - { search: '^\#?PermitRootLogin (yes|no)', replace: 'PermitRootLogin without-password' }
     - { search: '^\#?PasswordAuthentication (yes|no)', replace: 'PasswordAuthentication no' }
     - { search: '^\#?PubkeyAuthentication (yes|no)', replace: 'PubkeyAuthentication yes' }
+  when: add_ssh_keys == "yes"
   notify: restart ssh
 
 # ufw rules 

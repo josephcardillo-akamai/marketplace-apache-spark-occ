@@ -12,6 +12,7 @@ fi
 # <UDF name="cluster_size" label="Apache Spark cluster size" default="3" oneof="3" />
 # <UDF name="soa_email_address" label="Email address for Let's Encrypt Certificates" />
 # <UDF name="spark_user" label="User to login to Spark WebUI" />
+# <UDF name="add_ssh_keys" label="Add Account SSH Keys to All Nodes?" oneof="yes,no"  default="yes" />
 
 ## Domain Settings
 #<UDF name="subdomain" label="Subdomain" example="The subdomain for the DNS record. `www` will be entered if no subdomain is supplied (Requires Domain)" default="">
@@ -92,6 +93,16 @@ function setup {
   # rename provisioner and configure private IP if not present
   rename_provisioner
   configure_privateip
+
+  # write authorized_keys file
+  if [ "${ADD_SSH_KEYS}" == "yes" ]; then
+    if [ ! -d ~/.ssh ]; then 
+            mkdir ~/.ssh
+    else 
+            echo ".ssh directory is already created"
+    fi
+    curl -sH "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN_PASSWORD}" https://api.linode.com/v4/profile/sshkeys | jq -r .data[].ssh_key > /root/.ssh/authorized_keys
+  fi
 
   # clone repo and set up ansible environment
   git clone ${GIT_REPO} ${WORK_DIR}
