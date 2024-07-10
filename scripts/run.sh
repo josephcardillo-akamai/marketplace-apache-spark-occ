@@ -87,7 +87,7 @@ EOF
 }
 
 function deploy { 
-    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook --extra-vars "root_pass=${ROOT_PASS}"; done
+    for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
 }
 
 # function deploy {
