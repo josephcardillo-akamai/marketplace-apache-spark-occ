@@ -20,16 +20,16 @@ function destroy {
   fi
 }
 
-function secrets {
-  local SECRET_VARS_PATH="./group_vars/spark/secret_vars"
-  local VAULT_PASS=$(openssl rand -base64 32)
-  local TEMP_ROOT_PASS=$(openssl rand -base64 32)
-  echo "${VAULT_PASS}" > ./.vault-pass
-  cat << EOF > ${SECRET_VARS_PATH}
-`ansible-vault encrypt_string "${TEMP_ROOT_PASS}" --name 'root_pass'`
-`ansible-vault encrypt_string "${TOKEN_PASSWORD}" --name 'token'`
-EOF
-}
+# function secrets {
+#   local SECRET_VARS_PATH="./group_vars/spark/secret_vars"
+#   local VAULT_PASS=$(openssl rand -base64 32)
+#   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
+#   echo "${VAULT_PASS}" > ./.vault-pass
+#   cat << EOF > ${SECRET_VARS_PATH}
+# `ansible-vault encrypt_string "${TEMP_ROOT_PASS}" --name 'root_pass'`
+# `ansible-vault encrypt_string "${TOKEN_PASSWORD}" --name 'token'`
+# EOF
+# }
 
 function master_ssh_key {
     ssh-keygen -o -a 100 -t ed25519 -C "ansible" -f "${HOME}/.ssh/id_ansible_ed25519" -q -N "" <<<y >/dev/null
@@ -45,6 +45,7 @@ function master_ssh_key {
 
 # production
 function build {
+  local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   secrets
   master_ssh_key
 
