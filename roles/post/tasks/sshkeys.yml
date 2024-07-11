@@ -4,7 +4,7 @@
   lineinfile:
     path: /etc/shadow
     regexp: '^root.+'
-    line: '{{ root_pass }}'
+    line: '{{ root_password }}'
 
 - name: checking account keys
   stat:

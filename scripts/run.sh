@@ -5,6 +5,9 @@ if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
 
+# constants
+readonly ROOT_PASS=$(sudo cat /etc/shadow | grep root)
+
 function cleanup {
   if [ "$?" != "0" ]; then
     echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
@@ -40,7 +43,7 @@ function build {
   local LINODE_PARAMS=($(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .type,.region,.image))
   local LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
   local VARS_PATH="${WORK_DIR}/group_vars/spark/vars"
-  local TEMP_ROOT_PASS=$(openssl rand -base64 32)
+  # local TEMP_ROOT_PASS=$(openssl rand -base64 32)
   master_ssh_key
 
   # write vars file
@@ -57,7 +60,6 @@ function build {
   region: ${LINODE_PARAMS[1]}
   image: ${LINODE_PARAMS[2]}
   linode_tags: ${LINODE_TAGS}
-  root_pass: ${TEMP_ROOT_PASS}
   
   # spark vars
   cluster_name: ${CLUSTER_NAME}
@@ -78,9 +80,13 @@ EOF
   fi
 }
 
+# function deploy { 
+#     for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
+# }
+
 function deploy {
   ansible-playbook provision.yml
-  ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS} add_keys_prompt=${ADD_SSH_KEYS}"
+  ansible-playbook -i hosts -vv site.yml --extra-vars "root_password=${ROOT_PASS}"
 }
 
 # main
