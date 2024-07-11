@@ -24,27 +24,39 @@
     path: '{{ local_home}}/.ssh/authorized_keys'
   register: authorized_keys_file
 
+# - name: adding account keys to sudo user
+#   copy:
+#     src: '{{ local_home }}/.ssh/authorized_keys'
+#     dest: '{{ item.userdir }}/.ssh/authorized_keys'
+#     mode: '0600'
+#     owner: "{{ item.user }}"
+#     group: "{{ item.user }}"
+#   loop:
+#     - { userdir: '/root', user: 'root' }
+#     - { userdir: '/home/{{ sudo_username }}', user: '{{ sudo_username }}' }
+#   when:
+#     - authorized_keys_file.stat.exists
+#     - authorized_keys_file.stat.size > 0
+
 - name: adding account keys to sudo user
-  copy:
-    src: '{{ local_home }}/.ssh/authorized_keys'
-    dest: '{{ item.userdir }}/.ssh/authorized_keys'
-    mode: '0600'
-    owner: "{{ item.user }}"
-    group: "{{ item.user }}"
+  ansible.posix.authorized_key:
+    user: "{{ item.user }}"
+    key: "{{ lookup('file', local_home + '/.ssh/authorized_keys') }}"
+    state: present
   loop:
-    - { userdir: '/root', user: 'root' }
-    - { userdir: '/home/{{ sudo_username }}', user: '{{ sudo_username }}' }
+    - { user: 'root' }
+    - { user: '{{ sudo_username }}' }
   when:
     - authorized_keys_file.stat.exists
     - authorized_keys_file.stat.size > 0
 
-- name: append spark public key to spark workers
-  ansible.posix.authorized_key:
-    user: root
-    state: present
-    key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
+# - name: append spark public key to spark workers
+#   ansible.posix.authorized_key:
+#     user: root
+#     state: present
+#     key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
+#   delegate_to: "{{ item }}"
+#   loop: "{{ groups['spark_workers'] }}"
 
 - name: remove ansible from authorized_keys
   lineinfile:
