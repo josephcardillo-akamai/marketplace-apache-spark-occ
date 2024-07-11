@@ -7,15 +7,14 @@
     - group_vars/spark/secret_vars
 
   vars:
-    count: '{{ cluster_size }}'
-    count_less_one: '{{ cluster_size - 1 }}'
+    count: '{{ cluster_size - 1 }}'
   
   tasks:
 
     - name: creating Spark servers
       linode.cloud.instance:
         label: '{{ instance_prefix }}{{ item | int + 1 }}-{{ uuid }}'
-        api_token: '{{ token }}'
+        api_token: '{{ token_password }}'
         type: '{{ type }}'
         region: '{{ region }}'
         image: '{{ image }}'
@@ -27,14 +26,14 @@
         tags: '{{ linode_tags }}'
         state: present
       register: linode
-      with_sequence: count='{{ count_less_one }}'
+      with_sequence: count='{{ count }}'
 
     - name: Get info about an instance by label
       linode.cloud.instance_info:
-        api_token: '{{ token }}'
+        api_token: '{{ token_password }}'
         label: '{{ instance_prefix }}{{ item | int }}-{{ uuid }}'
       register: info
-      with_sequence: count='{{ count }}'
+      with_sequence: count='{{ cluster_size | int }}'
 
     - name: update group_vars with server variables
       blockinfile:
@@ -44,12 +43,12 @@
           #jinja2: trim_blocks:False
           spark_data:
             server:
-              {%- for count in range(cluster_size | int) %}
-              - spark-server-{{ count }}:
+              {%- for server in range(cluster_size | int) %}
+              - spark-server-{{ server }}:
                 instance:
-                  hostname: {{ info.results[count].instance.label | replace('_', '-') }}
-                  ip_pub1: {{ info.results[count].instance.ipv4[0] }}
-                  ip_priv1: {{ info.results[count].instance.ipv4[1] }}
+                  hostname: {{ info.results[server].instance.label | replace('_', '-') }}
+                  ip_pub1: {{ info.results[server].instance.ipv4[0] }}
+                  ip_priv1: {{ info.results[server].instance.ipv4[1] }}
               {%- endfor %}          
 
     - name: write spark password to group_vars
@@ -70,8 +69,8 @@
           [spark_master]
           localhost ansible_connection=local user=root
           [spark_workers]
-          {%- for count in range(cluster_size - 1) %}
-          {{ info.results[count + 1].instance.ipv4[0] }}
+          {%- for server in range(count | int) %}
+          {{ info.results[server + 1].instance.ipv4[0] }}
           {%- endfor %}
 
     - name: wait for port 22 to become open
