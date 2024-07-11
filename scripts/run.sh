@@ -82,11 +82,6 @@ function deploy {
     for playbook in provision.yml site.yml; do ansible-playbook -v -i hosts $playbook; done
 }
 
-# function deploy {
-#   ansible-playbook provision.yml
-#   ansible-playbook -v -i hosts site.yml --extra-vars "root_password=${ROOT_PASS} add_keys_prompt=${ADD_SSH_KEYS}"
-# }
-
 # main
 case $1 in
     build) "$@"; exit;;
