@@ -38,19 +38,27 @@
     - authorized_keys_file.stat.exists
     - authorized_keys_file.stat.size > 0
 
-- name: Extract the first line of /root/.ssh/authorized_keys
-  command: "head -n 1 /root/.ssh/authorized_keys"
-  register: first_line_key
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: Append master's key to workers' authorized_keys
-  lineinfile:
-    path: "/root/.ssh/authorized_keys"
-    line: "{{ hostvars[groups['spark_master'][0]]['first_line_key']['stdout'] }}"
+- name: append spark public key to spark workers
+  ansible.posix.authorized_key:
+    user: root
     state: present
+    key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
+
+# - name: Extract the first line of /root/.ssh/authorized_keys
+#   command: "head -n 1 /root/.ssh/authorized_keys"
+#   register: first_line_key
+#   delegate_to: "{{ groups['spark_master'][0] }}"
+#   run_once: true
+
+# - name: Append master's key to workers' authorized_keys
+#   lineinfile:
+#     path: "/root/.ssh/authorized_keys"
+#     line: "{{ hostvars[groups['spark_master'][0]]['first_line_key']['stdout'] }}"
+#     state: present
+#   delegate_to: "{{ item }}"
+#   loop: "{{ groups['spark_workers'] }}"
 
 - name: remove ansible from authorized_keys
   lineinfile:

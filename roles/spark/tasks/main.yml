@@ -9,36 +9,11 @@
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
 
-# - name: distribute public key to spark workers
-#   ansible.posix.authorized_key:
-#     user: root
-#     key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
-#   delegate_to: "{{ item }}"
-#   loop: "{{ groups['spark_workers'] }}"
-
-- name: Debug - Print the content of id_rsa_spark.pub
-  debug:
-    msg: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
 - name: distribute public key to spark workers
   ansible.posix.authorized_key:
     user: root
     state: present
     key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
-
-- name: Debug - Print content of authorized_keys on a worker
-  command: cat /root/.ssh/authorized_keys
-  register: worker_auth_keys
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
-
-- name: Debug - Display worker authorized_keys content
-  debug:
-    var: worker_auth_keys.stdout_lines
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
 
