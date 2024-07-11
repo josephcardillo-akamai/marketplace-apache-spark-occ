@@ -37,26 +37,26 @@ Make sure that the following values are updated at the top of the code block bef
 SHELL:
 ```
 # user defined
-export TOKEN="YOUR API TOKEN"
+export TOKEN="your api token"
 export ROOT_PASS="aComplexP@ssword"
 export SUDO_USERNAME="admin"
 export CLUSTER_NAME="name of your cluster"
 export LABEL="cluster label"
 export SPARK_USER="spark username"
-export SPARK_UI_PASSWORD="spark UI password"
+export REGION="datacenter region"
 
 curl -H "Content-Type: application/json" \
 -H "Authorization: Bearer $TOKEN" \
 -X POST -d '{
     "authorized_users": [
-        "myUser"
+        "yourUser"
     ],
     "backups_enabled": false,
     "booted": true,
     "image": "linode/ubuntu22.04",
     "label": "apache-spark-cluster",
     "private_ip": false,
-    "region": "us-mia",
+    "region": "${REGION}",
     "root_pass": "${ROOT_PASS}",
     "stackscript_data": {
         "add_ssh_keys": "yes",
@@ -65,12 +65,11 @@ curl -H "Content-Type: application/json" \
         "cluster_name": "${CLUSTER_NAME}",
         "sudo_username": "${SUDO_USERNAME}",
         "soa_email_address": "${SOA_EMAIL_ADDRESS}",
-        "spark_user": "${SPARK_USER}",
-        "spark_ui_password": "${SPARK_UI_PASSWORD}"
+        "spark_user": "${SPARK_USER}"
     },
     "stackscript_id": 1403818,
     "tags": [
-        "mytag"
+        "yourtag"
     ],
     "type": "g6-standard-2"
 }' https://api.linode.com/v4/linode/instances
@@ -80,15 +79,15 @@ curl -H "Content-Type: application/json" \
 CLI:
 ```
 linode-cli linodes create \
-  --authorized_users myUser \
+  --authorized_users yourUser \
   --backups_enabled false \
   --booted true \
   --image 'linode/ubuntu22.04' \
   --label ${LABEL} \
   --private_ip true \
-  --region us-iad \
+  --region ${REGION} \
   --root_pass '${ROOT_PASS}' \
-  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "spark_ui_password":"${SPARK_UI_PASSWORD}", "domain":"${DOMAIN}"}' \
+  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
   --stackscript_id 1403818 \
   --tags mytag \
   --type g6-standard-2
