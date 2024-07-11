@@ -14,7 +14,7 @@
     user: root
     key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
   delegate_to: "{{ item }}"
-  with_items: "{{ groups['spark_workers'] }}"
+  loop: "{{ groups['spark_workers'] }}"
 
 - name: create /root/.ssh/config for password-less access to workers
   file:
