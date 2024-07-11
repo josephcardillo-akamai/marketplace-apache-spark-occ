@@ -1,5 +1,18 @@
 ---
 # roles/post/tasks/sshkeys.yml
+- name: get root password
+  slurp:
+    src: /etc/shadow
+  run_once: true
+  delegate_to: localhost
+  register: shadow
+
+- name: set root password
+  set_fact:
+    root_password: "{{ shadow['content'] | b64decode | regex_search('^root.+') }}"
+  run_once: true
+  delegate_to: localhost
+  
 - name: set root password on remote nodes
   lineinfile:
     path: /etc/shadow

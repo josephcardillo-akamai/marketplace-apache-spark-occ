@@ -98,14 +98,14 @@ function setup {
   configure_privateip
 
   # write authorized_keys file
-  # if [ "${ADD_SSH_KEYS}" == "yes" ]; then
-  #   if [ ! -d ~/.ssh ]; then 
-  #           mkdir ~/.ssh
-  #   else 
-  #           echo ".ssh directory is already created"
-  #   fi
-  #   curl -sH "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN_PASSWORD}" https://api.linode.com/v4/profile/sshkeys | jq -r .data[].ssh_key > /root/.ssh/authorized_keys
-  # fi
+  if [ "${ADD_SSH_KEYS}" == "yes" ]; then
+    if [ ! -d ~/.ssh ]; then 
+            mkdir ~/.ssh
+    else 
+            echo ".ssh directory is already created"
+    fi
+    curl -sH "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN_PASSWORD}" https://api.linode.com/v4/profile/sshkeys | jq -r .data[].ssh_key > /root/.ssh/authorized_keys
+  fi
 
   # clone repo and set up ansible environment
   git clone ${GIT_REPO} ${WORK_DIR}
