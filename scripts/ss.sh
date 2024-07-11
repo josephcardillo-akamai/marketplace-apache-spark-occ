@@ -129,7 +129,6 @@ function setup {
 setup
 run build
 run deploy && export SUCCESS="true"
-# if [ "${DEBUG}" == "NO" ]; then
-#   cleanup
-# fi
-cleanup
+if [ "${DEBUG}" == "NO" ]; then
+  cleanup
+fi

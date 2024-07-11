@@ -86,5 +86,4 @@ function deploy {
 case $1 in
     build) "$@"; exit;;
     deploy) "$@"; exit;;
-    cleanup) "$@"; exit;;
 esac
