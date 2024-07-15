@@ -22,7 +22,7 @@
   
 - name: Configure NGINX for Spark Master
   template:
-    src: nginx_master.conf.j2
+    src: nginx-master.conf.j2
     dest: /etc/nginx/sites-available/{{ _domain }}
 
 - name: Enable NGINX configuration on master
