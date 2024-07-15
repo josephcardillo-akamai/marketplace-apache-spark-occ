@@ -192,6 +192,11 @@
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
 
+- name: add core-site.xml file
+  template:
+    src: core-site.xml.j2
+    dest: /opt/spark/conf/core-site.xml
+
 - name: start spark master
   systemd:
     name: spark-master
