@@ -34,7 +34,8 @@
 - name: setting system hostname on workers
   hostname:
     name: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
-  delegate_to: "{{ groups['spark_worker'] }}"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_worker'] }}"
   when: 
     - domain is defined
 
