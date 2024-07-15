@@ -35,7 +35,7 @@
   hostname:
     name: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
   delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_worker'] }}"
+  loop: "{{ groups['spark_workers'] }}"
   when: 
     - domain is defined
 
