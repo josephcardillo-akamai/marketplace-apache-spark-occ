@@ -196,6 +196,7 @@
   template:
     src: core-site.xml.j2
     dest: /opt/spark/conf/core-site.xml
+  delegate_to: "{{ groups['spark_master'][0] }}"
 
 - name: start spark master
   systemd:
