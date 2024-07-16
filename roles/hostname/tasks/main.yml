@@ -6,7 +6,7 @@
   set_fact:
     _domain: '{{ subdomain }}.{{ domain }}'
     cacheable: yes
-  # delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
   when:
     - domain is defined
@@ -16,7 +16,7 @@
   set_fact:
     _domain: '{{ domain }}'
     cacheable: yes
- # delegate_to: "{{ groups['spark_master'][0] }}"
+ delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
   when: 
     - domain is defined
@@ -25,7 +25,7 @@
 - name: setting system hostname on master
   hostname:
     name: "{{ _domain }}" 
-  # delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
   when: 
     - domain is defined
@@ -34,7 +34,7 @@
 - name: setting system hostname on workers
   hostname:
     name: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
-  # delegate_to: "{{ item }}"
+  delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
   when: 
     - domain is defined
@@ -56,5 +56,5 @@
     path: /etc/hosts
     line: "{{ ansible_default_ipv4.address }} {{ _domain }}"
     insertafter: EOF
-  # delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
