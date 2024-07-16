@@ -16,7 +16,7 @@
   set_fact:
     _domain: '{{ domain }}'
     cacheable: yes
- delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
   when: 
     - domain is defined
