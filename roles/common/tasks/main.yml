@@ -41,7 +41,7 @@
 - name: Create DNS A records
   # import_tasks: create_dns_record.yml
   import_role:
-    name: create_dns_record.yml
+    name: create_dns_record
   when: 
     - token_password is defined
     - domain is defined
