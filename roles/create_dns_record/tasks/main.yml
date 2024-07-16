@@ -6,12 +6,10 @@
   debug:
     msg: "{{ ansible_default_ipv4.address }}"
   register: ip_address
-  # delegate_to: "{{ groups['spark_master'][0] }}"
 
 - name: print ip address
   ansible.builtin.debug:
     var: ip_address
-  # delegate_to: "{{ groups['spark_master'][0] }}"
 
 # loop through domains the provided API token has grants to. Creating an A record without a zone, or creating a duplicate zone will fail the play.
 - name: check existence of domain zone
@@ -21,24 +19,20 @@
         api_token: "{{ token_password }}"
         domain: "{{ domain }}"
       register: domain_output
-      # delegate_to: "{{ groups['spark_master'][0] }}"
 
     - name: print domain info
       ansible.builtin.debug:
         var: domain_output.zone_file.zone_file.0
-      # delegate_to: "{{ groups['spark_master'][0] }}"
 
     - name: check domain existence
       ansible.builtin.debug:
         msg: "domain zone already exists"
       when: domain in domain_output.zone_file.zone_file.0
-      # delegate_to: "{{ groups['spark_master'][0] }}"
 
   rescue:
     - name: handle failure
       ansible.builtin.debug:
         msg: "domain zone does not exist"
-      # delegate_to: "{{ groups['spark_master'][0] }}"
 
 - name: create a dns zone
   linode.cloud.domain:
@@ -47,7 +41,6 @@
     state: present
     type: master
     soa_email: "{{ soa_email_address }}"
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when:
     - domain is defined
     - domain_output.zone_file.zone_file.0 is not defined
@@ -61,7 +54,6 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when:
     - domain is defined
     - subdomain == "www"
@@ -75,7 +67,6 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when: subdomain is defined
 
 - name: wait for DNS propogation
@@ -90,7 +81,6 @@
   until: ip_address.msg in dig_result.msg
   retries: 5
   delay: 10
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when:
     - domain is defined
     - subdomain == "www"
@@ -102,7 +92,6 @@
   until: ip_address.msg in dig_result.msg
   retries: 5
   delay: 10
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when:
     - domain is defined
     - subdomain != "www"
