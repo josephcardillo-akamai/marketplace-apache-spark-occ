@@ -39,8 +39,7 @@
 
 # dns creation
 - name: Create DNS A records
-  import_tasks:
-    name: create_dns_record.yml
+  import_tasks: create_dns_record.yml
   delegate_to: "{{ groups['spark_master'][0] }}"
   when: 
     - token_password is defined
