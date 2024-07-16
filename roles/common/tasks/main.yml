@@ -39,10 +39,13 @@
 
 # dns creation
 - name: Create DNS A records
-  import_tasks: create_dns_record.yml
+  # import_tasks: create_dns_record.yml
+  import_role:
+    name: create_dns_record.yml
   when: 
     - token_password is defined
     - domain is defined
+    - "'spark_master' in group_names"
 
 - name: secure ssh configs
   lineinfile:
