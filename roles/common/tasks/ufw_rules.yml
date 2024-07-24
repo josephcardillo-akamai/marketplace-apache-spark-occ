@@ -15,7 +15,7 @@
     - 8480
     - 8481
 
-- name: Allow ephemeral ports for executor
+- name: Allow ephemeral ports for executors
   community.general.ufw:
     rule: allow
     port: 33000:61000
