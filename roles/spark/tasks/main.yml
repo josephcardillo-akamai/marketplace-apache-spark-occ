@@ -141,7 +141,7 @@
 
 - name: create spark worker systemd service file
   copy:
-    dest: /etc/systemd/system/spark-worker.service
+    dest: /etc/systemd/system/spark-workers.service
     content: |
       [Unit]
       Description=Apache Spark Workers
