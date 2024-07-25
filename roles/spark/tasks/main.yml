@@ -148,13 +148,14 @@
       After=network.target
 
       [Service]
-      Type=forking
+      Type=simple
       User=root
       Group=root
       ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
       ExecStop=/opt/spark/sbin/stop-workers.sh
       Restart=on-failure
-
+      RemainAfterExit=yes
+      
       [Install]
       WantedBy=multi-user.target
   delegate_to: "{{ groups['spark_master'][0] }}"
