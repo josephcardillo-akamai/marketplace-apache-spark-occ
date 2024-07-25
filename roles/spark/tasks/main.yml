@@ -132,9 +132,37 @@
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
 
-- name: enable spark master
+- name: enable spark worker
   systemd:
-    name: spark-master
+    name: spark-worker
+    enabled: yes
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
+
+- name: create spark worker systemd service file
+  copy:
+    dest: /etc/systemd/system/spark-worker.service
+    content: |
+      [Unit]
+      Description=Apache Spark Workers
+      After=network.target
+
+      [Service]
+      Type=forking
+      User=root
+      Group=root
+      ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+      ExecStop=/opt/spark/sbin/stop-workers.sh
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+  delegate_to: "{{ groups['spark_master'][0] }}"
+  run_once: true
+
+- name: enable spark workers
+  systemd:
+    name: spark-workers
     enabled: yes
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
@@ -205,8 +233,15 @@
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
 
+# - name: start spark workers
+#   command:
+#     cmd: "/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077"
+#   delegate_to: "{{ groups['spark_master'][0] }}"
+#   run_once: true
+
 - name: start spark workers
-  command:
-    cmd: "/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077"
+  systemd:
+    name: spark-workers
+    state: started
   delegate_to: "{{ groups['spark_master'][0] }}"
   run_once: true
