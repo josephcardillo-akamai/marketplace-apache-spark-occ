@@ -32,11 +32,6 @@
     remote_src: yes
   notify: start fail2ban
 
-# set_hostname
-# - name: setting up hostname
-#   import_role:
-#     name: hostname
-
 - name: setting up hostname
   import_tasks: hostname.yml
 
