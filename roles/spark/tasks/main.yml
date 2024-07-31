@@ -47,7 +47,6 @@
 #   delegate_to: "{{ groups['spark_master'][0] }}"
 #   run_once: true
 
-
 - name: add ssh config for workers to /home/spark/.ssh/config
   blockinfile:
     path: /home/spark/.ssh/config
