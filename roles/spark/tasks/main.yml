@@ -5,6 +5,8 @@
 
 - name: generate ssh key pair for spark user
   import_tasks: spark_keypair.yml
+  run_once: true
+  delegate_to: localhost
 
 # - name: generate ssh key pair on spark master
 #   openssh_keypair:
@@ -23,14 +25,14 @@
 #   delegate_to: "{{ item }}"
 #   loop: "{{ groups['spark_workers'] }}"
 
-- name: create /root/.ssh/config for password-less access to workers
-  file:
-    path: /root/.ssh/config
-    state: touch
-    mode: '0600'
-  become: true
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
+# - name: create /root/.ssh/config for password-less access to workers
+#   file:
+#     path: /root/.ssh/config
+#     state: touch
+#     mode: '0600'
+#   become: true
+#   delegate_to: "{{ groups['spark_master'][0] }}"
+#   run_once: true
 
 # - name: add ssh config for workers to /root/.ssh/config
 #   blockinfile:
@@ -44,6 +46,7 @@
 #       {% endfor %}
 #   delegate_to: "{{ groups['spark_master'][0] }}"
 #   run_once: true
+
 
 - name: add ssh config for workers to /home/spark/.ssh/config
   blockinfile:
