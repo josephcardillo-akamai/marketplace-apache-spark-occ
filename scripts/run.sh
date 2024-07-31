@@ -64,7 +64,7 @@ function build {
   cluster_name: ${CLUSTER_NAME}
   cluster_size: ${CLUSTER_SIZE}
   spark_user: ${SPARK_USER}
-  spark_home "${SPARK_HOME}"
+  spark_home: ${SPARK_HOME}
 
   # ssl/tls
   soa_email_address: ${SOA_EMAIL_ADDRESS}
