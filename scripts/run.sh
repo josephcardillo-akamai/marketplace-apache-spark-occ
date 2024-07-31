@@ -5,14 +5,14 @@ if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
 
-function cleanup {
-  if [ "$?" != "0" ]; then
-    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
-    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
-    destroy
-    exit 1
-  fi
-}
+# function cleanup {
+#   if [ "$?" != "0" ]; then
+#     echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
+#     rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
+#     destroy
+#     exit 1
+#   fi
+# }
 
 # utility functions
 function destroy {
