@@ -47,20 +47,6 @@
 #   delegate_to: "{{ groups['spark_master'][0] }}"
 #   run_once: true
 
-
-- name: add ssh config for workers to /home/spark/.ssh/config
-  blockinfile:
-    path: /home/spark/.ssh/config
-    block: |
-      #jinja2: trim_blocks:False
-      {% for server in spark_data.server[1:cluster_size|int] %}
-      Host {{ server.instance.ip_pub1 }}
-          User spark
-          IdentityFile /home/spark/.ssh/id_rsa_spark 
-      {% endfor %}
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
 - name: install Java
   apt:
     name: openjdk-11-jdk
@@ -82,13 +68,14 @@
 - name: extract spark
   unarchive:
     src: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
-    dest: "/opt"
+    dest: "{{ spark_home }}"
     owner: spark
     group: spark
     remote_src: yes
 
 - name: rename spark directory
-  command: mv /opt/spark-3.4.3-bin-hadoop3 /opt/spark
+  shell:
+  cmd: mv /opt/spark-3.4.3-bin-hadoop3/* /opt/spark
 
 # - name: Set ownership of Spark installation directory
 #   file:
@@ -97,18 +84,23 @@
 #     group: root
 #     recurse: yes
 
+- name: create spark configuration directory
+  file:
+    path: "{{ spark_home }}/conf"
+    state: directory
+    mode: '0755'
+
 - name: Set ownership of Spark installation directory
   file:
-    path: "/opt/spark"
+    path: "{{ spark_home }}"
     owner: spark
     group: spark
     recurse: yes
 
-- name: create spark configuration directory
+- name: Clean up downloaded archive
   file:
-    path: "/opt/spark/conf"
-    state: directory
-    mode: '0755'
+    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    state: absent
 
 - name: configure spark-env.sh on master
   template:
@@ -158,8 +150,8 @@
 
       [Service]
       Type=forking
-      User=root
-      Group=root
+      User=spark
+      Group=spark
       ExecStart=/opt/spark/sbin/start-master.sh
       ExecStop=/opt/spark/sbin/stop-master.sh
       Restart=on-failure
@@ -186,8 +178,8 @@
 
       [Service]
       Type=simple
-      User=root
-      Group=root
+      User=spark
+      Group=spark
       ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
       ExecStop=/opt/spark/sbin/stop-workers.sh
       Restart=on-failure
