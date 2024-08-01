@@ -75,7 +75,7 @@
 
 - name: rename spark directory
   shell:
-  cmd: mv /opt/spark-3.4.3-bin-hadoop3/* /opt/spark
+    cmd: mv /opt/spark-3.4.3-bin-hadoop3/* /opt/spark
 
 # - name: Set ownership of Spark installation directory
 #   file:
