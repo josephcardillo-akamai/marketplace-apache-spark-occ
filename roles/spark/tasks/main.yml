@@ -73,9 +73,9 @@
     group: spark
     remote_src: yes
 
-- name: rename spark directory
+- name: move spark download to spark home directory
   shell:
-    cmd: mv /opt/spark-3.4.3-bin-hadoop3/* /opt/spark
+    cmd: mv /opt/spark/spark-3.4.3-bin-hadoop3/* /opt/spark
 
 # - name: Set ownership of Spark installation directory
 #   file:
@@ -83,6 +83,16 @@
 #     owner: root
 #     group: root
 #     recurse: yes
+
+- name: Clean up downloaded archive
+  file:
+    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    state: absent
+
+- name: remove /tmp/spark-3.4.3-bin-hadoop3
+  file:
+    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    state: absent
 
 - name: create spark configuration directory
   file:
@@ -97,10 +107,6 @@
     group: spark
     recurse: yes
 
-- name: Clean up downloaded archive
-  file:
-    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
-    state: absent
 
 - name: configure spark-env.sh on master
   template:
