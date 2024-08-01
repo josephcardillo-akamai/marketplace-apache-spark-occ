@@ -47,6 +47,30 @@
 #   delegate_to: "{{ groups['spark_master'][0] }}"
 #   run_once: true
 
+- name: create /opt/spark/.ssh/config for password-less access to workers
+  file:
+    path: /{{ spark_home }}/.ssh/config
+    state: touch
+    mode: '0600'
+    owner: spark
+    group: spark
+  become: true
+  delegate_to: localhost
+  run_once: true
+
+- name: add ssh config for workers to /opt/spark/.ssh/config
+  blockinfile:
+    path: /{{ spark_home }}/.ssh/config
+    block: |
+      #jinja2: trim_blocks:False
+      {% for server in spark_data.server[1:cluster_size|int] %}
+      Host {{ server.instance.ip_pub1 }}
+          User spark
+          IdentityFile /{{ spark_home }}/.ssh/id_rsa 
+      {% endfor %}
+  delegate_to: localhost
+  run_once: true
+
 - name: install Java
   apt:
     name: openjdk-11-jdk
@@ -89,9 +113,9 @@
     path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
     state: absent
 
-- name: remove /tmp/spark-3.4.3-bin-hadoop3
+- name: remove /opt/spark/spark-3.4.3-bin-hadoop3
   file:
-    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    path: "/opt/spark/spark-3.4.3-bin-hadoop3.tgz"
     state: absent
 
 - name: create spark configuration directory
@@ -186,6 +210,7 @@
       Type=simple
       User=spark
       Group=spark
+      Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa"
       ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
       ExecStop=/opt/spark/sbin/stop-workers.sh
       Restart=on-failure
