@@ -1,0 +1,14 @@
+---
+- name: start spark master
+  systemd:
+    name: spark-master
+    state: started
+  # delegate_to: localhost
+  # run_once: true
+
+- name: start spark workers
+  systemd:
+    name: spark-workers
+    state: started
+  # delegate_to: localhost
+  # run_once: true
