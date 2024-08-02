@@ -1,0 +1,15 @@
+---
+- name: update /etc/hosts
+  blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} SPARK HOSTS"
+    block: |
+    #jinja2: trim_blocks:False
+    {%- for server in range(cluster_size | int) %}
+    {{ spark_data.server[count].instance.ip_priv1 }} {{ spark_data.server[count].instance.hostname }}
+    {%- endfor %}
+
+- name: configure hostnames
+  hostname:
+    use: systemd
+    name: "{{ spark_data.server[count].instance.hostname }}"
