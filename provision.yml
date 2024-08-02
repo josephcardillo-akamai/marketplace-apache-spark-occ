@@ -51,7 +51,7 @@
     #               ip_priv1: {{ info.results[server].instance.ipv4[1] }}
     #           {%- endfor %}          
 
-    - name: update group_vars with server variables
+    - name: update group_vars
       blockinfile:
         path: ./group_vars/spark/vars
         marker: "# {mark} INSTANCE VARS"
@@ -59,7 +59,7 @@
           #jinja2: trim_blocks:False
           spark_data:
             server:
-              {%- for server in range(cluster_size | int) %}
+              {%- for server in range(cluster_size) %}
               - spark{{ server + 1 }}:
                 instance:
                   hostname: spark{{ count + 1 }}
