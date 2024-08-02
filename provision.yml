@@ -59,7 +59,7 @@
           #jinja2: trim_blocks:False
           spark_data:
             server:
-              {%- for server in range(cluster_size | int) %}
+              {%- for server in range(cluster_size) %}
               - spark{{ server + 1 }}:
                 instance:
                   hostname: spark{{ server + 1 }}
