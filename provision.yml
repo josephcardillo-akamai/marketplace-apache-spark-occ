@@ -59,10 +59,10 @@
           #jinja2: trim_blocks:False
           spark_data:
             server:
-              {%- for server in range(cluster_size) %}
+              {%- for server in range(cluster_size | int) %}
               - spark{{ server + 1 }}:
                 instance:
-                  hostname: spark{{ count + 1 }}
+                  hostname: spark{{ server + 1 }}
                   ip_pub1: {{ info.results[server].instance.ipv4[0] }}
                   ip_priv1: {{ info.results[server].instance.ipv4[1] }}
               {%- endfor %}  
