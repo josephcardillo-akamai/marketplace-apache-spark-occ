@@ -42,7 +42,6 @@
   delegate_to: localhost
   when: 
     - token_password is defined
-    - domain is defined
 
 - name: secure ssh configs
   lineinfile:
