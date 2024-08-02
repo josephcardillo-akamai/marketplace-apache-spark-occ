@@ -67,3 +67,15 @@
     cmd: "certbot -n --nginx --agree-tos --redirect certonly -d {{ default_dns }} -m {{ soa_email_address }}"
   when: 
     - default_dns is defined
+
+- name: set up SSL certificate renewal cronjob
+  cron:
+    name: "Renew Let's Encrypt SSL certificates"
+    job: "/usr/bin/certbot renew --nginx --quiet --deploy-hook 'systemctl reload nginx'"
+    minute: "0"
+    hour: "3"
+    day: "1"
+    month: "*/3"
+    user: root
+  delegate_to: localhost
+  run_once: true

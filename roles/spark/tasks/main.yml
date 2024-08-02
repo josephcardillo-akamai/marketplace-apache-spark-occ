@@ -1,248 +1,32 @@
 ---
 # roles/spark/tasks/main.yml
-- name: generate ssh key pair on spark master
-  openssh_keypair:
-    path: /root/.ssh/id_rsa_spark
-    owner: root
-    group: root
-    mode: 0600
-  delegate_to: "{{ groups['spark_master'][0] }}"
+- name: create spark user
+  import_tasks: user.yml
+
+- name: generate ssh key pair for spark user
+  import_tasks: keypair.yml
   run_once: true
+  delegate_to: localhost
 
-- name: distribute public key to spark workers
-  ansible.posix.authorized_key:
-    user: root
-    state: present
-    key: "{{ lookup('file', '/root/.ssh/id_rsa_spark.pub') }}"
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
-
-- name: create /root/.ssh/config for password-less access to workers
-  file:
-    path: /root/.ssh/config
-    state: touch
-    mode: '0600'
-  become: true
-  delegate_to: "{{ groups['spark_master'][0] }}"
+- name: create passwordless access to workers from master
+  import_tasks: passwordless.yml
   run_once: true
+  delegate_to: localhost
 
-- name: add ssh config for workers to /root/.ssh/config
-  blockinfile:
-    path: /root/.ssh/config
-    block: |
-      #jinja2: trim_blocks:False
-      {% for server in spark_data.server[1:cluster_size|int] %}
-      Host {{ server.instance.ip_pub1 }}
-          User root
-          IdentityFile /root/.ssh/id_rsa_spark 
-      {% endfor %}
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
+- name: install java, spark and scala
+  import_tasks: install_spark.yml
 
-- name: install Java
-  apt:
-    name: openjdk-11-jdk
-    state: present
-
-- name: download Spark
-  get_url:
-    url: "https://downloads.apache.org/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
-    dest: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
-
-- name: extract spark
-  unarchive:
-    src: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
-    dest: "/opt"
-    owner: root
-    group: root
-    remote_src: yes
-    
-- name: rename spark directory
-  command: mv /opt/spark-3.4.3-bin-hadoop3 /opt/spark
-
-- name: Set ownership of Spark installation directory
-  file:
-    path: "/opt/spark"
-    owner: root
-    group: root
-    recurse: yes
-
-- name: create spark configuration directory
-  file:
-    path: "/opt/spark/conf"
-    state: directory
-    mode: '0755'
-
-- name: configure spark-env.sh on master
-  template:
-    src: spark-env-master.sh.j2
-    dest: "/opt/spark/conf/spark-env.sh"
-    mode: '0755'
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: configure spark-env.sh on workers
-  template:
-    src: spark-env-worker.sh.j2
-    dest: "/opt/spark/conf/spark-env.sh"
-    mode: '0755'
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
-
-- name: configure spark-defaults.conf on master
-  template:
-    src: spark-defaults-master.conf.j2
-    dest: "/opt/spark/conf/spark-defaults.conf"
-    mode: '0755'
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: configure spark-defaults.conf on workers
-  template:
-    src: spark-defaults-worker.conf.j2
-    dest: "/opt/spark/conf/spark-defaults.conf"
-    mode: '0755'
-  delegate_to: "{{ item }}"
-  loop: "{{ groups['spark_workers'] }}"
-
-- name: populate spark workers file
-  template:
-    src: workers.j2
-    dest: "/opt/spark/conf/workers"
-    mode: '0644'
-
-- name: create spark master systemd service file
-  copy:
-    dest: /etc/systemd/system/spark-master.service
-    content: |
-      [Unit]
-      Description=Apache Spark Master
-      After=network.target
-
-      [Service]
-      Type=forking
-      User=root
-      Group=root
-      ExecStart=/opt/spark/sbin/start-master.sh
-      ExecStop=/opt/spark/sbin/stop-master.sh
-      Restart=on-failure
-
-      [Install]
-      WantedBy=multi-user.target
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: enable spark master
-  systemd:
-    name: spark-master
-    enabled: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: create spark worker systemd service file
-  copy:
-    dest: /etc/systemd/system/spark-workers.service
-    content: |
-      [Unit]
-      Description=Apache Spark Workers
-      After=network.target
-
-      [Service]
-      Type=simple
-      User=root
-      Group=root
-      ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
-      ExecStop=/opt/spark/sbin/stop-workers.sh
-      Restart=on-failure
-      RemainAfterExit=yes
-      
-      [Install]
-      WantedBy=multi-user.target
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: enable spark workers
-  systemd:
-    name: spark-workers
-    enabled: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: install scala
-  apt:
-    name: scala
-    state: present
-    update_cache: yes
-
-- name: add spark environment variables to .bashrc
-  lineinfile:
-    path: "{{ ansible_env.HOME }}/.bashrc"
-    create: yes
-    line: "{{ item }}"
-    state: present
-  with_items:
-    - 'export SPARK_HOME=/opt/spark'
-    - 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin'
-
-- name: source .bashrc
-  shell: source ~/.bashrc
-  args:
-    executable: /bin/bash
-
-- name: create spark-events directory
-  file:
-    path: /var/log/spark-events
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
-
-# create let's encrypt certs for master
 - name: create and install ssl certificates
   import_tasks: ssl.yml
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
 
-# instal nginx reverse proxy for authentication to master 
 - name: install nginx for reverse proxy auth
   import_tasks: nginx.yml
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
 
-- name: set up SSL certificate renewal cronjob
-  cron:
-    name: "Renew Let's Encrypt SSL certificates"
-    job: "/usr/bin/certbot renew --nginx --quiet --deploy-hook 'systemctl reload nginx'"
-    minute: "0"
-    hour: "3"
-    day: "1"
-    month: "*/3"
-    user: root
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-- name: add core-site.xml file
-  template:
-    src: core-site.xml.j2
-    dest: /opt/spark/conf/core-site.xml
-  delegate_to: "{{ groups['spark_master'][0] }}"
-
-- name: start spark master
-  systemd:
-    name: spark-master
-    state: started
-  delegate_to: "{{ groups['spark_master'][0] }}"
-  run_once: true
-
-# - name: start spark workers
-#   command:
-#     cmd: "/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077"
-#   delegate_to: "{{ groups['spark_master'][0] }}"
-#   run_once: true
-
-- name: start spark workers
-  systemd:
-    name: spark-workers
-    state: started
-  delegate_to: "{{ groups['spark_master'][0] }}"
+- name: start spark
+  import_tasks: start_spark.yml
+  delegate_to: localhost
   run_once: true

@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
-DEBUG="NO"
+DEBUG="YES"
 if [ "${DEBUG}" == "NO" ]; then
   trap "cleanup $? $LINENO" EXIT
 fi
 
-function cleanup {
-  if [ "$?" != "0" ]; then
-    echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
-    rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
-    destroy
-    exit 1
-  fi
-}
+# function cleanup {
+#   if [ "$?" != "0" ]; then
+#     echo "PLAYBOOK FAILED. See /var/log/stackscript.log for details."
+#     rm ${HOME}/.ssh/id_ansible_ed25519{,.pub}
+#     destroy
+#     exit 1
+#   fi
+# }
 
 # utility functions
 function destroy {
@@ -41,6 +41,7 @@ function build {
   local LINODE_TAGS=$(curl -sH "Authorization: Bearer ${TOKEN_PASSWORD}" "https://api.linode.com/v4/linode/instances/${LINODE_ID}" | jq -r .tags)
   local VARS_PATH="${WORK_DIR}/group_vars/spark/vars"
   local TEMP_ROOT_PASS=$(openssl rand -base64 32)
+  local SPARK_HOME="/opt/spark"
   master_ssh_key
 
   # write vars file
@@ -63,6 +64,7 @@ function build {
   cluster_name: ${CLUSTER_NAME}
   cluster_size: ${CLUSTER_SIZE}
   spark_user: ${SPARK_USER}
+  spark_home: ${SPARK_HOME}
 
   # ssl/tls
   soa_email_address: ${SOA_EMAIL_ADDRESS}

@@ -1,0 +1,169 @@
+- name: install Java
+  apt:
+    name: openjdk-11-jdk
+    state: present
+
+- name: download Spark
+  get_url:
+    url: "https://downloads.apache.org/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
+    dest: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+
+- name: extract spark
+  unarchive:
+    src: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    dest: "{{ spark_home }}"
+    owner: spark
+    group: spark
+    remote_src: yes
+
+- name: move spark download to spark home directory
+  shell:
+    cmd: mv /opt/spark/spark-3.4.3-bin-hadoop3/* /opt/spark
+
+- name: Clean up downloaded archive
+  file:
+    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    state: absent
+
+- name: remove /opt/spark/spark-3.4.3-bin-hadoop3
+  file:
+    path: "/opt/spark/spark-3.4.3-bin-hadoop3.tgz"
+    state: absent
+
+- name: create spark configuration directory
+  file:
+    path: "{{ spark_home }}/conf"
+    state: directory
+    mode: '0755'
+
+- name: Set ownership of Spark installation directory
+  file:
+    path: "{{ spark_home }}"
+    owner: spark
+    group: spark
+    recurse: yes
+
+- name: configure spark-env.sh on master
+  template:
+    src: spark-env-master.sh.j2
+    dest: "/opt/spark/conf/spark-env.sh"
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: configure spark-env.sh on workers
+  template:
+    src: spark-env-worker.sh.j2
+    dest: "/opt/spark/conf/spark-env.sh"
+    mode: '0755'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
+
+- name: configure spark-defaults.conf on master
+  template:
+    src: spark-defaults-master.conf.j2
+    dest: "/opt/spark/conf/spark-defaults.conf"
+    mode: '0755'
+  delegate_to: localhost
+  run_once: true
+
+- name: configure spark-defaults.conf on workers
+  template:
+    src: spark-defaults-worker.conf.j2
+    dest: "/opt/spark/conf/spark-defaults.conf"
+    mode: '0755'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
+
+- name: populate spark workers file
+  template:
+    src: workers.j2
+    dest: "/opt/spark/conf/workers"
+    mode: '0644'
+
+- name: create spark master systemd service file
+  copy:
+    dest: /etc/systemd/system/spark-master.service
+    content: |
+      [Unit]
+      Description=Apache Spark Master
+      After=network.target
+
+      [Service]
+      Type=forking
+      User=spark
+      Group=spark
+      ExecStart=/opt/spark/sbin/start-master.sh
+      ExecStop=/opt/spark/sbin/stop-master.sh
+      Restart=on-failure
+
+      [Install]
+      WantedBy=multi-user.target
+  delegate_to: localhost
+  run_once: true
+
+- name: enable spark master
+  systemd:
+    name: spark-master
+    enabled: yes
+  delegate_to: localhost
+  run_once: true
+
+- name: create spark worker systemd service file
+  copy:
+    dest: /etc/systemd/system/spark-workers.service
+    content: |
+      [Unit]
+      Description=Apache Spark Workers
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=spark
+      Group=spark
+      Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa -o StrictHostKeyChecking=no"
+      ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+      ExecStop=/opt/spark/sbin/stop-workers.sh
+      Restart=on-failure
+      RemainAfterExit=yes
+      
+      [Install]
+      WantedBy=multi-user.target
+  delegate_to: localhost
+  run_once: true
+
+- name: enable spark workers
+  systemd:
+    name: spark-workers
+    enabled: yes
+  delegate_to: localhost
+  run_once: true
+
+- name: install scala
+  apt:
+    name: scala
+    state: present
+    update_cache: yes
+
+- name: add spark environment variables to .bashrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    create: yes
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - 'export SPARK_HOME=/opt/spark'
+    - 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin'
+
+- name: source .bashrc
+  shell: source ~/.bashrc
+  args:
+    executable: /bin/bash
+
+- name: create spark-events directory
+  file:
+    path: /var/log/spark-events
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
