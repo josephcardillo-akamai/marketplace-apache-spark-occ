@@ -19,7 +19,7 @@
 - name: configure hostnames on workers
   hostname:
     use: systemd
-    name: "{{ spark_data.server[count].instance.hostname }}"
+    name: "{{ spark_data.server[count + 1].instance.hostname }}"
   run_once: true
   delegate_to: "{{ item }}"
   loop: "{{ groups['spark_workers'] }}"
