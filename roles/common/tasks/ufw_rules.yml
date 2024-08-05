@@ -18,6 +18,13 @@
     from_ip: "{{ item.instance.ip_priv1 }}"
   loop: "{{ spark_data.server }}"
 
+- name: allow access to port 8081 for worker reverse proxy
+  community.general.ufw:
+    rule: allow
+    port: 8081
+    proto: tcp
+  delegate_to: "{{ groups['spark_workers'] }}"
+
 # async to avoid connection disruption
 - name: Enable ufw
   community.general.ufw:
