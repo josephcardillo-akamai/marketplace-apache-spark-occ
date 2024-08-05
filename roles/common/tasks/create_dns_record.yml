@@ -102,12 +102,14 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  when: subdomain is defined
+  when: 
+    - domain is defined
+    - subdomain is defined
 
 - name: wait for DNS propogation
   ansible.builtin.pause: 
     minutes: 3
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  # delegate_to: "{{ groups['spark_master'][0] }}"
 
 - name: A record lookup for domain
   debug:
