@@ -110,6 +110,7 @@
   ansible.builtin.pause: 
     minutes: 3
   # delegate_to: "{{ groups['spark_master'][0] }}"
+  when: domain is defined
 
 - name: A record lookup for domain
   debug:

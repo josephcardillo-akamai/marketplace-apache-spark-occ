@@ -14,8 +14,9 @@
     use: systemd
     name: "{{ spark_data.server[0].instance.hostname }}"
   delegate_to: localhost
+  run_once: true
 
-- name: configure hostnames
+- name: configure hostnames on workers
   hostname:
     use: systemd
     name: "{{ spark_data.server[count].instance.hostname }}"
