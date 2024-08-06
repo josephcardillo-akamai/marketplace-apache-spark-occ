@@ -23,7 +23,8 @@
     rule: allow
     port: 8081
     proto: tcp
-  delegate_to: "{{ groups['spark_workers'] }}"
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['spark_workers'] }}"
 
 # async to avoid connection disruption
 - name: Enable ufw
