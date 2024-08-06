@@ -57,7 +57,7 @@
         block: |
             #jinja2: trim_blocks:False
             # Spark UI Password
-            spark_ui_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits,punctuation') }}
+            spark_ui_password: {{ lookup('password', '/dev/null length=25 chars=ascii_letters,digits') }}
 
     - name: update inventory
       blockinfile:
