@@ -33,12 +33,12 @@
   debug:
     msg: "{{ ansible_default_ipv4.address }}"
   register: ip_address
-  when: domain is not defined
+  when: domain is defined
 
 - name: print ip address
   ansible.builtin.debug:
     var: ip_address
-  when: domain is not defined
+  when: domain is defined
 
 # loop through domains the provided API token has grants to. Creating an A record without a zone, or creating a duplicate zone will fail the play.
 # or creating a duplicate zone will fail the play.
@@ -49,25 +49,24 @@
         api_token: "{{ token_password }}"
         domain: "{{ domain }}"
       register: domain_output
-      when: domain is not defined
+      when: domain is defined
 
     - name: print domain info
       ansible.builtin.debug:
         var: domain_output.zone_file.zone_file.0
-      when: domain is not defined
+      when: domain is defined
 
     - name: check domain existence
       ansible.builtin.debug:
         msg: "domain zone already exists"
       when: 
-        - domain is not defined
+        - domain is defined
         - domain in domain_output.zone_file.zone_file.0
-
   rescue:
     - name: handle failure
       ansible.builtin.debug:
         msg: "domain zone does not exist"
-      when: domain is not defined
+      when: domain is defined
 
 - name: create a dns zone
   linode.cloud.domain:
