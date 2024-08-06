@@ -5,7 +5,7 @@
   set_fact:
     _domain: '{{ subdomain }}.{{ domain }}'
     cacheable: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
   when:
     - domain is defined
@@ -15,7 +15,7 @@
   set_fact:
     _domain: '{{ domain }}'
     cacheable: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
   when: 
     - domain is defined
@@ -109,7 +109,6 @@
 - name: wait for DNS propogation
   ansible.builtin.pause: 
     minutes: 3
-  # delegate_to: "{{ groups['spark_master'][0] }}"
   when: domain is defined
 
 - name: A record lookup for domain

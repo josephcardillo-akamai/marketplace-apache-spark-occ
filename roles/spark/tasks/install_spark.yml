@@ -45,7 +45,7 @@
 
 - name: configure spark-env.sh on master
   template:
-    src: spark-env-master.sh.j2
+    src: templates/spark-env-master.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
     mode: '0755'
   delegate_to: localhost
@@ -53,7 +53,7 @@
 
 - name: configure spark-env.sh on workers
   template:
-    src: spark-env-worker.sh.j2
+    src: templates/spark-env-worker.sh.j2
     dest: "/opt/spark/conf/spark-env.sh"
     mode: '0755'
   delegate_to: "{{ item }}"
@@ -61,7 +61,7 @@
 
 - name: configure spark-defaults.conf on master
   template:
-    src: spark-defaults-master.conf.j2
+    src: templates/spark-defaults-master.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
     mode: '0755'
   delegate_to: localhost
@@ -69,7 +69,7 @@
 
 - name: configure spark-defaults.conf on workers
   template:
-    src: spark-defaults-worker.conf.j2
+    src: templates/spark-defaults-worker.conf.j2
     dest: "/opt/spark/conf/spark-defaults.conf"
     mode: '0755'
   delegate_to: "{{ item }}"
@@ -77,28 +77,38 @@
 
 - name: populate spark workers file
   template:
-    src: workers.j2
+    src: templates/workers.j2
     dest: "/opt/spark/conf/workers"
     mode: '0644'
 
-- name: create spark master systemd service file
-  copy:
+# - name: create spark master systemd service file
+#   copy:
+#     dest: /etc/systemd/system/spark-master.service
+#     content: |
+#       [Unit]
+#       Description=Apache Spark Master
+#       After=network.target
+
+#       [Service]
+#       Type=forking
+#       User=spark
+#       Group=spark
+#       ExecStart=/opt/spark/sbin/start-master.sh
+#       ExecStop=/opt/spark/sbin/stop-master.sh
+#       Restart=on-failure
+
+#       [Install]
+#       WantedBy=multi-user.target
+#   delegate_to: localhost
+#   run_once: true
+
+- name: move spark-master systemd service file
+  ansible.builtin.copy:
+    src: files/spark-master.service 
     dest: /etc/systemd/system/spark-master.service
-    content: |
-      [Unit]
-      Description=Apache Spark Master
-      After=network.target
-
-      [Service]
-      Type=forking
-      User=spark
-      Group=spark
-      ExecStart=/opt/spark/sbin/start-master.sh
-      ExecStop=/opt/spark/sbin/stop-master.sh
-      Restart=on-failure
-
-      [Install]
-      WantedBy=multi-user.target
+    owner: spark
+    group: spark
+    mode: '0664'
   delegate_to: localhost
   run_once: true
 
@@ -109,26 +119,36 @@
   delegate_to: localhost
   run_once: true
 
-- name: create spark worker systemd service file
-  copy:
-    dest: /etc/systemd/system/spark-workers.service
-    content: |
-      [Unit]
-      Description=Apache Spark Workers
-      After=network.target
+# - name: create spark worker systemd service file
+#   copy:
+#     dest: /etc/systemd/system/spark-workers.service
+#     content: |
+#       [Unit]
+#       Description=Apache Spark Workers
+#       After=network.target
 
-      [Service]
-      Type=simple
-      User=spark
-      Group=spark
-      Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa -o StrictHostKeyChecking=no"
-      ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
-      ExecStop=/opt/spark/sbin/stop-workers.sh
-      Restart=on-failure
-      RemainAfterExit=yes
+#       [Service]
+#       Type=simple
+#       User=spark
+#       Group=spark
+#       Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa -o StrictHostKeyChecking=no"
+#       ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
+#       ExecStop=/opt/spark/sbin/stop-workers.sh
+#       Restart=on-failure
+#       RemainAfterExit=yes
       
-      [Install]
-      WantedBy=multi-user.target
+#       [Install]
+#       WantedBy=multi-user.target
+#   delegate_to: localhost
+#   run_once: true
+
+- name: move spark-workers systemd service file
+  template:
+    src: templates/spark-workers.service.j2
+    dest: "/etc/systemd/system/spark-workers.service"
+    owner: spark
+    group: spark
+    mode: '0644'
   delegate_to: localhost
   run_once: true
 

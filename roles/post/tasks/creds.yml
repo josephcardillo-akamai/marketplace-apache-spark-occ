@@ -15,5 +15,5 @@
       # spark user
       spark user: {{ spark_user }}
       spark ui password: {{ spark_ui_password }}
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true

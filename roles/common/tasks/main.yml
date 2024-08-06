@@ -23,6 +23,7 @@
     - python3-venv
     - fail2ban
     - ufw
+    - apache2-utils
     state: present
 
 - name: fail2ban jail
@@ -31,9 +32,6 @@
     dest: /etc/fail2ban/fail2ban.local
     remote_src: yes
   notify: start fail2ban
-
-# - name: setting up hostname
-#   import_tasks: hostname.yml
 
 # dns creation
 - name: Create dns A records

@@ -6,7 +6,7 @@
   set_fact:
     _domain: '{{ subdomain }}.{{ domain }}'
     cacheable: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
   when:
     - domain is defined
@@ -16,27 +16,11 @@
   set_fact:
     _domain: '{{ domain }}'
     cacheable: yes
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  delegate_to: localhost
   run_once: true
   when: 
     - domain is defined
     - subdomain == "www"
-  
-# - name: setting system hostname on master
-#   hostname:
-#     name: "{{ _domain }}" 
-#   delegate_to: "{{ groups['spark_master'][0] }}"
-#   run_once: true
-#   when: 
-#     - domain is defined
-
-# Since worker UIs are viewed through reverse proxy, hostname will always be default dns on workers
-# - name: setting system hostname on workers
-#   hostname:
-#     name: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
-#   when: 
-#     - domain is defined
-#     - "'spark_workers' in group_names"
 
 # When domain is not defined
 - name: set dns fact for default rdns
