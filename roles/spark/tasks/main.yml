@@ -1,5 +1,8 @@
 ---
 # roles/spark/tasks/main.yml
+- name: configure hostname
+  import_tasks: hostname.yml
+  
 - name: create spark user
   import_tasks: user.yml
 

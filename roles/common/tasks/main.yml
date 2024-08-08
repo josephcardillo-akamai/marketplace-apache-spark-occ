@@ -23,6 +23,7 @@
     - python3-venv
     - fail2ban
     - ufw
+    - apache2-utils
     state: present
 
 - name: fail2ban jail
@@ -32,17 +33,13 @@
     remote_src: yes
   notify: start fail2ban
 
-- name: setting up hostname
-  import_tasks: hostname.yml
-
 # dns creation
-- name: Create DNS A records
-  import_role:
-    name: create_dns_record
+- name: Create dns A records
+  import_tasks: create_dns_record.yml
+  run_once: true
+  delegate_to: localhost
   when: 
     - token_password is defined
-    - domain is defined
-    - "'spark_master' in group_names"
 
 - name: secure ssh configs
   lineinfile:

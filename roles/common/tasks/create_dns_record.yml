@@ -1,17 +1,47 @@
 ---
-# roles/create_dns_record/tasks/main.yml
-# create dns records
+# roles/common/tasks/create_dns_record.yml
+# set dns facts when domain is defined
+- name: set dns fact for subdomain
+  set_fact:
+    _domain: '{{ subdomain }}.{{ domain }}'
+    cacheable: yes
+  delegate_to: localhost
+  run_once: true
+  when:
+    - domain is defined
+    - subdomain != "www"
+    
+- name: set dns fact for domain
+  set_fact:
+    _domain: '{{ domain }}'
+    cacheable: yes
+  delegate_to: localhost
+  run_once: true
+  when: 
+    - domain is defined
+    - subdomain == "www"
 
+# set dns facts when domain is not defined
+- name: set dns fact for default rdns
+  set_fact:
+    _domain: "{{ ansible_default_ipv4.address | replace('.', '-') }}.ip.linodeusercontent.com"
+    cacheable: yes
+  when: domain is not defined
+
+# create dns records
 - name: get host default IPv4 address
   debug:
     msg: "{{ ansible_default_ipv4.address }}"
   register: ip_address
+  when: domain is defined
 
 - name: print ip address
   ansible.builtin.debug:
     var: ip_address
+  when: domain is defined
 
 # loop through domains the provided API token has grants to. Creating an A record without a zone, or creating a duplicate zone will fail the play.
+# or creating a duplicate zone will fail the play.
 - name: check existence of domain zone
   block:
     - name: lookup domain info
@@ -19,20 +49,24 @@
         api_token: "{{ token_password }}"
         domain: "{{ domain }}"
       register: domain_output
+      when: domain is defined
 
     - name: print domain info
       ansible.builtin.debug:
         var: domain_output.zone_file.zone_file.0
+      when: domain is defined
 
     - name: check domain existence
       ansible.builtin.debug:
         msg: "domain zone already exists"
-      when: domain in domain_output.zone_file.zone_file.0
-
+      when: 
+        - domain is defined
+        - domain in domain_output.zone_file.zone_file.0
   rescue:
     - name: handle failure
       ansible.builtin.debug:
         msg: "domain zone does not exist"
+      when: domain is defined
 
 - name: create a dns zone
   linode.cloud.domain:
@@ -67,12 +101,14 @@
     target: "{{ ansible_default_ipv4.address }}"
     ttl_sec: 30
     state: present
-  when: subdomain is defined
+  when: 
+    - domain is defined
+    - subdomain is defined
 
 - name: wait for DNS propogation
   ansible.builtin.pause: 
     minutes: 3
-  delegate_to: "{{ groups['spark_master'][0] }}"
+  when: domain is defined
 
 - name: A record lookup for domain
   debug:

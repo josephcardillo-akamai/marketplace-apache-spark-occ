@@ -4,11 +4,6 @@
     name: nginx
     state: present
 
-- name: Install apache2-utils for htpasswd
-  apt:
-    name: apache2-utils
-    state: present
-
 - name: Create basic auth password file
   community.general.htpasswd:
     path: /etc/nginx/.htpasswd
@@ -22,7 +17,7 @@
   
 - name: Configure NGINX for Spark Master
   template:
-    src: nginx-master.conf.j2
+    src: templates/nginx-master.conf.j2
     dest: /etc/nginx/sites-available/{{ _domain }}
 
 - name: Enable NGINX configuration on master
