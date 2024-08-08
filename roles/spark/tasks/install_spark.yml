@@ -81,27 +81,6 @@
     dest: "/opt/spark/conf/workers"
     mode: '0644'
 
-# - name: create spark master systemd service file
-#   copy:
-#     dest: /etc/systemd/system/spark-master.service
-#     content: |
-#       [Unit]
-#       Description=Apache Spark Master
-#       After=network.target
-
-#       [Service]
-#       Type=forking
-#       User=spark
-#       Group=spark
-#       ExecStart=/opt/spark/sbin/start-master.sh
-#       ExecStop=/opt/spark/sbin/stop-master.sh
-#       Restart=on-failure
-
-#       [Install]
-#       WantedBy=multi-user.target
-#   delegate_to: localhost
-#   run_once: true
-
 - name: move spark-master systemd service file
   ansible.builtin.copy:
     src: files/spark-master.service 
@@ -118,29 +97,6 @@
     enabled: yes
   delegate_to: localhost
   run_once: true
-
-# - name: create spark worker systemd service file
-#   copy:
-#     dest: /etc/systemd/system/spark-workers.service
-#     content: |
-#       [Unit]
-#       Description=Apache Spark Workers
-#       After=network.target
-
-#       [Service]
-#       Type=simple
-#       User=spark
-#       Group=spark
-#       Environment="SPARK_SSH_OPTS=-i /opt/spark/.ssh/id_rsa -o StrictHostKeyChecking=no"
-#       ExecStart=/opt/spark/sbin/start-workers.sh spark://{{ spark_data.server[0].instance.ip_priv1 }}:7077
-#       ExecStop=/opt/spark/sbin/stop-workers.sh
-#       Restart=on-failure
-#       RemainAfterExit=yes
-      
-#       [Install]
-#       WantedBy=multi-user.target
-#   delegate_to: localhost
-#   run_once: true
 
 - name: move spark-workers systemd service file
   template:
