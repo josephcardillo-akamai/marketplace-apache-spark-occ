@@ -4,6 +4,7 @@
   set_fact:
     sudo_username_pass: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
   run_once: true
+  no_log: true
   delegate_to: localhost
 
 - name: create sudo user
