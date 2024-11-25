@@ -5,7 +5,7 @@
 
 - name: download Spark
   get_url:
-    url: "https://downloads.apache.org/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
+    url: "https://archive.apache.org/dist/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
     dest: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
 
 - name: extract spark
