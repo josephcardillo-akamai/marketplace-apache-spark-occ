@@ -3,31 +3,65 @@
     name: openjdk-11-jdk
     state: present
 
-- name: download Spark
-  get_url:
-    url: "https://archive.apache.org/dist/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
-    dest: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+# - name: download Spark
+#   get_url:
+#     url: "https://archive.apache.org/dist/spark/spark-3.4.3/spark-3.4.3-bin-hadoop3.tgz"
+#     dest: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+
+- name: Download Spark with fallback
+  block:
+    - name: Try downloading Spark from main repository
+      get_url:
+        url: "https://downloads.apache.org/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz"
+        dest: "/tmp/spark-3.5.3-bin-hadoop3.tgz"
+  rescue:
+    - name: Download Spark from archive repository
+      get_url:
+        url: "https://archive.apache.org/dist/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz"
+        dest: "/tmp/spark-3.5.3-bin-hadoop3.tgz"
+
+# - name: extract spark
+#   unarchive:
+#     src: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+#     dest: "{{ spark_home }}"
+#     owner: spark
+#     group: spark
+#     remote_src: yes
 
 - name: extract spark
   unarchive:
-    src: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    src: "/tmp/spark-3.5.3-bin-hadoop3.tgz"
     dest: "{{ spark_home }}"
     owner: spark
     group: spark
     remote_src: yes
 
+# - name: move spark download to spark home directory
+#   shell:
+#     cmd: mv /opt/spark/spark-3.4.3-bin-hadoop3/* /opt/spark
+
 - name: move spark download to spark home directory
   shell:
-    cmd: mv /opt/spark/spark-3.4.3-bin-hadoop3/* /opt/spark
+    cmd: mv /opt/spark/spark-3.5.3-bin-hadoop3/* /opt/spark
+
+# - name: Clean up downloaded archive
+#   file:
+#     path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+#     state: absent
 
 - name: Clean up downloaded archive
   file:
-    path: "/tmp/spark-3.4.3-bin-hadoop3.tgz"
+    path: "/tmp/spark-3.5.3-bin-hadoop3.tgz"
     state: absent
 
-- name: remove /opt/spark/spark-3.4.3-bin-hadoop3
+# - name: remove /opt/spark/spark-3.4.3-bin-hadoop3
+#   file:
+#     path: "/opt/spark/spark-3.4.3-bin-hadoop3.tgz"
+#     state: absent
+
+- name: remove /opt/spark/spark-3.5.3-bin-hadoop3
   file:
-    path: "/opt/spark/spark-3.4.3-bin-hadoop3.tgz"
+    path: "/opt/spark/spark-3.5.3-bin-hadoop3.tgz"
     state: absent
 
 - name: create spark configuration directory
