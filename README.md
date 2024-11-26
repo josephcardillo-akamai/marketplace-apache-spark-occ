@@ -28,6 +28,18 @@ A Let's Encrypt Certificate is installed in the NGINX configuration. Using NGINX
 | UFW | | Uncomplicated Firewall for managing firewall rules |
 | Fail2ban | | Intrusion prevention software framework for protection against brute-force attacks |
 
+## Spark Shell
+
+The Spark Shell is an interactive shell that comes pre-installed with your Apache Spark cluster. It provides a powerful REPL (Read-Eval-Print Loop) environment where you can interactively analyze data using Scala. The shell is particularly useful for data exploration, prototyping algorithms, and testing Spark functionality in real-time.
+
+To start the Spark Shell, simply open a terminal on the master node and run:
+
+```bash
+spark-shell
+```
+
+This will launch an interactive Scala console with Spark context (`sc`) and Spark session (`spark`) automatically initialized. You can immediately start executing Spark operations, such as loading data, performing transformations, and running SQL queries.
+
 ## Use our API
 
 Customers can choose to the deploy the Apache Spark app through the Linode Marketplace or directly using API. Before using the commands below, you will need to create an API token or configure linode-cli on an environment.
@@ -87,6 +99,16 @@ linode-cli linodes create \
   --private_ip true \
   --region ${REGION} \
   --root_pass '${ROOT_PASS}' \
+  --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
+  --stackscript_id 1403818 \
+  --tags mytag \
+  --type g6-standard-2
+
+```
+
+## Resources
+- [Create Linode via API](https://www.linode.com/docs/api/linode-instances/#linode-create)
+- [Stackscript referece](https://www.linode.com/docs/guides/writing-scripts-for-use-with-linode-stackscripts-a-tutorial/#user-defined-fields-udfs)
   --stackscript_data '{"add_ssh_keys": "yes","cluster_size":"3","token_password":"${TOKEN_PASSWORD}","cluster_name":"${CLUSTER_NAME}","sudo_username":"${SUDO_USERNAME}","soa_email_address":"${SOA_EMAIL_ADDRESS}", "domain":"${DOMAIN}"}' \
   --stackscript_id 1403818 \
   --tags mytag \
