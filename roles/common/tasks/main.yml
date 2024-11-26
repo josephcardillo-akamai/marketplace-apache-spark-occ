@@ -1,6 +1,5 @@
 ---
 # roles/common/tasks
-# common tasks for all linodes
 - name: apt update
   apt:
     update_cache: yes

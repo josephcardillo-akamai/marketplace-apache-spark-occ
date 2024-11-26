@@ -40,8 +40,6 @@
     var: ip_address
   when: domain is defined
 
-# loop through domains the provided API token has grants to. Creating an A record without a zone, or creating a duplicate zone will fail the play.
-# or creating a duplicate zone will fail the play.
 - name: check existence of domain zone
   block:
     - name: lookup domain info

@@ -1,6 +1,5 @@
 ---
 # Create spark system user and group
-
 - name: check if spark group exists
   getent:
     database: group

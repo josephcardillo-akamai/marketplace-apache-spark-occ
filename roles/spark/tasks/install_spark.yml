@@ -1,3 +1,4 @@
+---
 - name: install Java
   apt:
     name: openjdk-11-jdk
